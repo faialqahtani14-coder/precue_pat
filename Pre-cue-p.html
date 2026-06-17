@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Pre-cue Seizure Prediction | Patient Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #eef2f7; font-family: 'Inter', sans-serif; color: #1a2e3b; min-height: 100vh; }
+    .app-container { width: 100%; background: #ffffff; min-height: 100vh; display: flex; flex-direction: column; }
+    .app-header { background: #ffffff; padding: 1.2rem 1.5rem; border-bottom: 1px solid #e7edf2; position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .logo-icon { font-size: 2.2rem; color: #2a9d8f; }
+    .logo-text { font-size: 1.8rem; font-weight: 800; background: linear-gradient(135deg, #176b87, #2a9d8f); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .sub { font-size: 0.8rem; color: #6b8c9e; margin-left: auto; }
+    .logout-header-btn { background: #fff0e6; border: none; padding: 6px 12px; border-radius: 40px; font-weight: 500; color: #bc5a2c; cursor: pointer; font-size: 0.8rem; margin-left: 10px; }
+    .page { display: none; padding: 1.5rem; flex: 1; animation: fade 0.2s ease; }
+    .active-page { display: block; }
+    @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .card { background: white; border-radius: 1.8rem; padding: 1.6rem; box-shadow: 0 4px 12px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.05); border: 1px solid #eef3f8; margin-bottom: 1.2rem; width: 100%; }
+    .title-icon { font-size: 1.6rem; font-weight: 700; display: flex; align-items: center; gap: 12px; margin-bottom: 1.4rem; border-left: 5px solid #2a9d8f; padding-left: 16px; }
+    .input-field, .textarea-field { width: 100%; padding: 1rem 1.2rem; border-radius: 60px; border: 1px solid #d6e3ec; font-size: 1rem; margin: 0.6rem 0 1.2rem; font-family: inherit; background: #fefefe; }
+    .textarea-field { border-radius: 1.5rem; resize: vertical; }
+    .btn { border: none; padding: 0.9rem 1.5rem; border-radius: 60px; font-weight: 600; font-size: 1rem; cursor: pointer; background: #f0f4f9; color: #1f5e7a; transition: 0.2s; }
+    .btn-primary { background: #176b87; color: white; box-shadow: 0 2px 6px rgba(23,107,135,0.2); }
+    .btn-primary:hover { background: #0d556d; transform: translateY(-1px); }
+    .btn-outline { background: transparent; border: 1px solid #cce0e9; }
+    .btn-sm { padding: 0.4rem 1rem; font-size: 0.85rem; }
+    .flex-row { display: flex; gap: 15px; flex-wrap: wrap; align-items: center; margin: 20px 0; }
+    .status-chip { display: inline-flex; align-items: center; gap: 8px; background: #eef3fa; padding: 0.5rem 1.2rem; border-radius: 60px; font-size: 0.95rem; font-weight: 500; }
+    .safe { background: #e0f2e9; color: #1e6f5c; }
+    .warning-chip { background: #fff0e6; color: #bc5a2c; }
+    .countdown-box { background: #fef3e8; border-radius: 2rem; padding: 1.4rem; text-align: center; }
+    .timer-digits { font-family: monospace; font-size: 2.8rem; font-weight: 800; letter-spacing: 3px; color: #bc5a2c; }
+    .toast-msg { font-size: 0.9rem; color: #2a9d8f; margin-top: 12px; background: #eefaf5; padding: 8px 15px; border-radius: 60px; display: inline-block; }
+    .account-row { display: flex; align-items: center; gap: 16px; padding: 16px 0; border-bottom: 1px solid #ecf3f8; font-weight: 600; font-size: 1.05rem; cursor: pointer; transition: 0.1s; }
+    .account-row i { width: 32px; font-size: 1.3rem; color: #176b87; }
+    .inline-notification { background: #2c3e4e; color: white; padding: 12px 18px; border-radius: 60px; margin-bottom: 15px; text-align: center; font-size: 0.9rem; }
+    .toggle-switch { display: flex; justify-content: space-between; align-items: center; margin: 1.2rem 0; font-size: 1.05rem; font-weight: 500; }
+    .switch { position: relative; display: inline-block; width: 58px; height: 32px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cddfe8; transition: 0.3s; border-radius: 34px; }
+    .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 3px; bottom: 3px; background-color: white; transition: 0.3s; border-radius: 50%; }
+    input:checked + .slider { background-color: #2a9d8f; }
+    input:checked + .slider:before { transform: translateX(26px); }
+    .bottom-nav { background: #ffffff; border-top: 1px solid #e6edf2; display: flex; justify-content: space-around; padding: 0.9rem 1rem 1rem; position: sticky; bottom: 0; background: rgba(255,255,255,0.96); backdrop-filter: blur(8px); }
+    .bottom-nav.hidden-nav { display: none; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: #86a2b5; cursor: pointer; }
+    .nav-item i { font-size: 1.7rem; }
+    .nav-item.active { color: #2a9d8f; }
+    .home-stack { display: flex; flex-direction: column; gap: 1.5rem; }
+    .contact-badge { background: #eef3fa; border-radius: 40px; padding: 8px 16px; display: flex; align-items: center; gap: 8px; margin: 5px 0; width: 100%; justify-content: space-between; flex-wrap: wrap; }
+    .primary-badge { background: #2a9d8f20; border-left: 3px solid #2a9d8f; }
+    .time-picker { display: flex; gap: 20px; align-items: center; margin: 1rem 0; flex-wrap: wrap; }
+    .time-picker label { font-weight: 500; }
+    hr { margin: 1rem 0; border: none; height: 1px; background: #eef2f6; }
+    .feedback-wizard-step { background: #f9fcfd; border-radius: 1.5rem; padding: 1.2rem; margin: 1rem 0; border: 1px solid #e3edf2; }
+    .readonly-treatment { background: #f8fafc; border-left: 4px solid #2a9d8f; padding: 1rem; border-radius: 1rem; font-style: italic; }
+    small { font-size: 0.8rem; color: #6c8eaa; }
+  </style>
+</head>
+<body>
+<div class="app-container">
+  <div class="app-header">
+    <i class="fas fa-waveform logo-icon"></i>
+    <span class="logo-text">Pre-cue</span>
+    <div class="sub">Smart Seizure Anticipation</div>
+    <button id="headerLogoutBtn" class="logout-header-btn"><i class="fas fa-sign-out-alt"></i> Log out</button>
+  </div>
+
+  <!-- LOGIN PAGE -->
+  <div id="page-login" class="page active-page">
+    <div class="card">
+      <div class="title-icon"><i class="fas fa-brain"></i> Patient Access</div>
+      <input type="text" id="loginUsername" class="input-field" placeholder="Username" autocomplete="off">
+      <input type="password" id="loginPassword" class="input-field" placeholder="Password">
+      <div class="flex-row" style="justify-content: space-between;">
+        <button id="doLoginBtn" class="btn btn-primary"><i class="fas fa-arrow-right-to-bracket"></i> Log in</button>
+        <button id="gotoForgotBtn" class="btn btn-outline">Forgot password?</button>
+      </div>
+      <div id="loginMsg" class="toast-msg"></div>
+    </div>
+  </div>
+
+  <!-- FORGOT / RESET PAGES -->
+  <div id="page-forgot" class="page"><div class="card"><div class="title-icon"><i class="fas fa-key"></i> Forgot Password</div><input type="email" id="forgotEmail" class="input-field" placeholder="Email address"><button id="sendOtpForgotBtn" class="btn btn-primary">Send OTP Code</button><div id="otpSentMsg" class="toast-msg"></div><hr><button id="backToLoginFromForgot" class="btn btn-outline">Back to Login</button></div></div>
+  <div id="page-reset" class="page"><div class="card"><div class="title-icon"><i class="fas fa-lock"></i> Reset Password</div><input type="password" id="newPwd" class="input-field" placeholder="New Password"><small>Min 8 chars, 1 uppercase, 1 digit</small><input type="password" id="confirmPwd" class="input-field" placeholder="Confirm Password"><button id="resetPwdConfirmBtn" class="btn btn-primary">Reset Password</button><div id="resetErrorMsg" class="toast-msg"></div><button id="backToLoginFromReset" class="btn btn-outline">Back to Login</button></div></div>
+  <div id="page-changed" class="page"><div class="card" style="text-align:center;"><i class="fas fa-check-circle" style="font-size: 3rem; color:#2a9d8f;"></i><h3 style="margin:1rem 0 0.5rem;">Password Changed!</h3><p>Successfully changed your password</p><button id="loginNowSuccessBtn" class="btn btn-primary" style="margin-top:1rem;">Log in Now</button></div></div>
+
+  <!-- HOME -->
+  <div id="page-home" class="page">
+    <div class="card">
+      <div class="title-icon"><i class="fas fa-home"></i> Patient Dashboard</div>
+      <div class="home-stack">
+        <div id="homeConnectionChip" class="status-chip"><i class="fas fa-wifi"></i> Connection: <strong>Loading...</strong></div>
+        <div id="homePredictionChip" class="status-chip safe"><i class="fas fa-shield-alt"></i> Monitoring Safely</div>
+        <button id="homeNotifyPhysicianBtn" class="btn btn-primary"><i class="fas fa-user-md"></i> Notify Physician</button>
+        <div id="homeLastPrediction"><i class="fas fa-chart-simple"></i> Last prediction: Loading...</div>
+        <div id="homeNextAnalysis"><i class="fas fa-clock"></i> Next analysis: continuous EEG monitoring</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RISK WINDOW PAGE -->
+  <div id="page-warning" class="page">
+    <div class="card">
+      <div class="title-icon"><i class="fas fa-exclamation-triangle" style="color:#c25d2e;"></i> Risk Window Analysis</div>
+      <div id="currentTimeDisplay" class="risk-time-badge"><i class="far fa-clock"></i> Current time: --:--:--</div>
+      <div id="riskWindowRange" class="risk-time-badge"><i class="fas fa-chart-line"></i> Predicted window: --:-- – --:--</div>
+      <div id="riskStatusMsg" style="font-weight:500; margin: 0.5rem 0;"></div>
+      <div class="countdown-box">
+        <div class="timer-digits" id="countdownTimer">--:--:--</div>
+        <small id="countdownLabel">Time remaining in risk window</small>
+      </div>
+      <div class="flex-row">
+        <button id="silenceWarningBtn" class="btn btn-outline"><i class="fas fa-volume-off"></i> Silence Alarm</button>
+        <button id="reNotifyCaregiverBtn" class="btn btn-primary"><i class="fas fa-bell"></i> Re-notify Primary Caregiver</button>
+        <button id="notifyPhysicianFromWarningBtn" class="btn btn-primary"><i class="fas fa-user-md"></i> Notify Physician</button>
+      </div>
+      <div id="warningStatusMsg" class="toast-msg"></div>
+      <hr>
+      <button id="backToHomeFromWarning" class="btn btn-outline">← Back to Home</button>
+    </div>
+  </div>
+
+  <!-- SEQUENTIAL FEEDBACK (one after one) -->
+  <div id="page-feedback" class="page">
+    <div class="card">
+      <div class="title-icon"><i class="fas fa-comment-medical"></i> Seizure Experience Feedback</div>
+      <div id="feedbackWizardContainer"></div>
+      <div id="feedbackAnswerMsg" class="toast-msg"></div>
+    </div>
+  </div>
+
+  <!-- ACCOUNT MAIN -->
+  <div id="page-account" class="page">
+    <div class="card">
+      <div class="title-icon"><i class="fas fa-user-circle"></i> Account</div>
+      <div class="account-row" data-page="editProfile"><i class="fas fa-user-pen"></i> Edit Profile</div>
+      <div class="account-row" data-page="seizureHistory"><i class="fas fa-clock-rotate-left"></i> Seizure History & Reports</div>
+      <div class="account-row" data-page="healthDetails"><i class="fas fa-heartbeat"></i> Health Details & Treatment</div>
+      <div class="account-row" data-page="myTeam"><i class="fas fa-users"></i> My Care Team</div>
+      <div class="account-row" data-page="alertSettings"><i class="fas fa-bell"></i> Alert & Risk Window Settings</div>
+      <div class="account-row" id="logoutAccountBtn"><i class="fas fa-sign-out-alt"></i> Log out</div>
+    </div>
+  </div>
+
+  <!-- EDIT PROFILE (shows info + edit) -->
+  <div id="page-editProfile" class="page"><div class="card"><div class="title-icon"><i class="fas fa-user-edit"></i> Edit Profile</div><input type="text" id="fullName" class="input-field" placeholder="Full Name"><input type="email" id="profileEmail" class="input-field" placeholder="Email"><input type="tel" id="phone" class="input-field" placeholder="Emergency Phone"><button id="saveProfileBtn" class="btn btn-primary">Save Changes</button><div id="profileMsg" class="toast-msg"></div><button class="btn btn-outline backToAccount" style="margin-top:1rem;">← Back to Account</button></div></div>
+  
+  <!-- SEIZURE HISTORY (system added only) -->
+  <div id="page-seizureHistory" class="page"><div class="card"><div class="title-icon"><i class="fas fa-chart-line"></i> Seizure Reports <span style="font-size:0.9rem;">(automatically recorded by system)</span></div><div id="seizureLogList"></div><button class="btn btn-outline backToAccount" style="margin-top:1rem;">← Back</button><div id="seizureMsg" class="toast-msg"></div></div></div>
+  
+  <!-- HEALTH & TREATMENT (treatment plan read-only / print not user enter) -->
+  <div id="page-healthDetails" class="page"><div class="card"><div class="title-icon"><i class="fas fa-notes-medical"></i> Health & Treatment Plan</div><label>Current Medications</label><textarea id="medications" rows="2" class="textarea-field" placeholder="e.g., Lamotrigine 100mg"></textarea><label>Allergies</label><input type="text" id="allergies" class="input-field"><label>Treatment Plan (prescribed by neurologist)</label><div id="treatmentPlanDisplay" class="readonly-treatment"></div><button id="saveHealthBtn" class="btn btn-primary">Save Health Info</button><div id="healthMsg" class="toast-msg"></div><button class="btn btn-outline backToAccount">← Back</button></div></div>
+
+  <!-- MY TEAM: physicians are fixed (not removable/addable) -->
+  <div id="page-myTeam" class="page">
+    <div class="card">
+      <div class="title-icon"><i class="fas fa-users"></i> My Care Team</div>
+      <h3 style="margin: 1rem 0 0.5rem;"><i class="fas fa-heart"></i> Caregivers (Family) – editable</h3>
+      <div id="caregiversList"></div>
+      <button id="addCaregiverBtn" class="btn btn-outline btn-sm"><i class="fas fa-plus"></i> Add Caregiver</button>
+      <hr>
+      <h3 style="margin: 1rem 0 0.5rem;"><i class="fas fa-user-md"></i> Physicians (fixed team, not removable)</h3>
+      <div id="physiciansListFixed"></div>
+      <div id="teamMsg" class="toast-msg"></div>
+      <button class="btn btn-outline backToAccount" style="margin-top:1rem;">← Back to Account</button>
+    </div>
+  </div>
+
+  <!-- ALERT SETTINGS (risk window section removed) -->
+  <div id="page-alertSettings" class="page">
+    <div class="card">
+      <div class="title-icon"><i class="fas fa-sliders-h"></i> Alert Settings</div>
+      <div class="toggle-switch"><span><i class="fas fa-volume-up"></i> Sound Alert</span><label class="switch"><input type="checkbox" id="soundCheckbox"><span class="slider"></span></label></div>
+      <div class="toggle-switch"><span><i class="fas fa-vibrate"></i> Vibration</span><label class="switch"><input type="checkbox" id="vibrationCheckbox"><span class="slider"></span></label></div>
+      <button id="saveAlertSettingsBtn" class="btn btn-primary"><i class="fas fa-save"></i> Save Alert Preferences</button>
+      <div id="alertSaveMsg" class="toast-msg"></div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav" id="bottomNav">
+    <div class="nav-item" data-nav="home"><i class="fas fa-home"></i><span>Home</span></div>
+    <div class="nav-item" data-nav="warning"><i class="fas fa-exclamation-triangle"></i><span>Risk Window</span></div>
+    <div class="nav-item" data-nav="feedback"><i class="fas fa-comment"></i><span>Feedback</span></div>
+    <div class="nav-item" data-nav="account"><i class="fas fa-user"></i><span>Account</span></div>
+  </div>
+</div>
+
+<script>
+  // =========================================================
+  // Pre-cue Patient Portal - API-connected version
+  // Uses the same FastAPI/SQLite database as the doctor dashboard.
+  // Only UI-only preferences remain in localStorage: session + sound/vibration.
+  // =========================================================
+
+  const API_BASE_URL = (window.PRECUE_API_BASE_URL || "https://primary-mild-sites-contacting.trycloudflare.com").replace(/\/$/, "");
+
+  let currentUser = null;
+  let currentPatientCode = localStorage.getItem("patientCode") || "";
+  let latestPatientStatus = null;
+  let patientStatusPoll = null;
+  let patientHistoryCache = [];
+
+  let riskInterval = null;
+  let lastInsideState = false;
+  let autoNotifyTriggered = false;
+  let audioCtx = null;
+  let soundMuted = false;
+
+  let feedbackStep = 0;
+  let feedbackAnswers = { q1: null, q2: null, q3: null, q4: null };
+
+  // ------------------------------
+  // API helpers
+  // ------------------------------
+  async function apiGet(endpoint) {
+    const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: "GET",
+      headers: { Accept: "application/json" },
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`API error ${res.status}: ${text}`);
+    }
+
+    return res.json();
+  }
+
+  async function apiPost(endpoint, payload) {
+    const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`API error ${res.status}: ${text}`);
+    }
+
+    return res.json();
+  }
+  async function apiPut(endpoint, payload) {
+  const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+    method: "PUT",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`API error ${res.status}: ${text}`);
+  }
+
+  return res.json();
+}
+
+  function patientLookupKey() {
+    return currentPatientCode || currentUser || localStorage.getItem("sessionUser") || "";
+  }
+
+  async function loadPatientStatus(showErrorToast = false) {
+    const lookup = patientLookupKey();
+    if (!lookup) return null;
+
+    try {
+      latestPatientStatus = await apiGet(`/patient/${encodeURIComponent(lookup)}/status`);
+
+      if (latestPatientStatus?.patient?.eeg_patient_code) {
+        currentPatientCode = latestPatientStatus.patient.eeg_patient_code;
+        localStorage.setItem("patientCode", currentPatientCode);
+      }
+
+      updateHomeFromApi();
+      updateRiskWindowUI();
+      hydrateVisibleAccountPages();
+
+      return latestPatientStatus;
+    } catch (err) {
+      console.error("Patient status error:", err);
+      if (showErrorToast) showGlobalToast("⚠️ Could not connect to Pre-cue server.");
+      return null;
+    }
+  }
+
+  function startPatientPolling() {
+    if (patientStatusPoll) clearInterval(patientStatusPoll);
+    loadPatientStatus(true);
+    patientStatusPoll = setInterval(() => loadPatientStatus(false), 3000);
+  }
+
+  async function loadPatientHistory() {
+    try {
+      const allHistory = await apiGet("/seizure-history");
+      const patient = latestPatientStatus?.patient;
+      const code = patient?.eeg_patient_code || currentPatientCode;
+      const username = patient?.username || currentUser;
+
+      patientHistoryCache = allHistory.filter((item) =>
+        item.eeg_patient_code === code ||
+        item.patientId === code ||
+        item.username === username
+      );
+
+      return patientHistoryCache;
+    } catch (err) {
+      console.error("History error:", err);
+      patientHistoryCache = [];
+      return [];
+    }
+  }
+
+  // ------------------------------
+  // Generic UI helpers
+  // ------------------------------
+  function validatePasswordStrength(pwd) {
+    return pwd.length >= 8 && /[A-Z]/.test(pwd) && /\d/.test(pwd);
+  }
+
+  function initAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+
+  function playEndOfWindowSound() {
+    if (soundMuted) return;
+    const soundPref = localStorage.getItem("soundPref") === "true";
+    if (!soundPref) return;
+
+    try {
+      initAudio();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+
+      const gain = audioCtx.createGain();
+      gain.gain.value = 0.3;
+      gain.connect(audioCtx.destination);
+
+      for (let i = 0; i < 3; i++) {
+        const osc = audioCtx.createOscillator();
+        osc.type = "sine";
+        osc.frequency.value = 600;
+        osc.connect(gain);
+        osc.start(audioCtx.currentTime + i * 0.3);
+        osc.stop(audioCtx.currentTime + i * 0.3 + 0.2);
+      }
+    } catch (e) {}
+  }
+  function triggerPatientRiskAlert() {
+  const soundPref = localStorage.getItem("soundPref") === "true";
+  const vibPref = localStorage.getItem("vibPref") === "true";
+
+  // Vibration for patient phone
+  if (vibPref && "vibrate" in navigator) {
+    navigator.vibrate([800, 300, 800, 300, 1200]);
+  }
+
+  // Sound alert
+  if (!soundPref || soundMuted) return;
+
+  try {
+    initAudio();
+
+    if (audioCtx.state === "suspended") {
+      audioCtx.resume();
+    }
+
+    const gain = audioCtx.createGain();
+    gain.gain.value = 0.45;
+    gain.connect(audioCtx.destination);
+
+    // stronger warning sound: 5 beeps
+    for (let i = 0; i < 5; i++) {
+      const osc = audioCtx.createOscillator();
+      osc.type = "sine";
+      osc.frequency.value = i % 2 === 0 ? 880 : 660;
+      osc.connect(gain);
+      osc.start(audioCtx.currentTime + i * 0.35);
+      osc.stop(audioCtx.currentTime + i * 0.35 + 0.22);
+    }
+  } catch (e) {
+    console.warn("Patient alert sound failed:", e);
+  }
+}
+
+  function stopSound() {
+    soundMuted = true;
+  }
+
+  function showToast(elId, msg, isErr = false) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+
+    el.innerHTML = msg;
+    el.style.color = isErr ? "#c25d2e" : "#2a9d8f";
+
+    setTimeout(() => {
+      if (el) el.innerHTML = "";
+    }, 3500);
+  }
+
+  function showGlobalToast(msg) {
+    const active = document.querySelector(".page.active-page");
+    if (!active) return;
+
+    const d = document.createElement("div");
+    d.className = "inline-notification";
+    d.innerText = msg;
+    active.prepend(d);
+
+    setTimeout(() => d.remove(), 2800);
+  }
+
+  function formatCountdownFromSeconds(totalSeconds) {
+    const safe = Math.max(0, totalSeconds);
+    const h = Math.floor(safe / 3600);
+    const m = Math.floor((safe % 3600) / 60);
+    const s = safe % 60;
+
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  }
+
+  function getPredictionEndTime(prediction) {
+    if (!prediction) return null;
+
+    const start = new Date(prediction.prediction_time).getTime();
+    const minutes = prediction.horizon_minutes || prediction.countdown_minutes || 0;
+
+    if (Number.isNaN(start)) return null;
+
+    return new Date(start + minutes * 60 * 1000);
+  }
+
+  function pct(value) {
+    if (value === null || value === undefined) return 0;
+    const n = Number(value);
+    return Math.round(n <= 1 ? n * 100 : n);
+  }
+
+  function getPrimaryCaregiver() {
+    const caregivers = latestPatientStatus?.caregivers || [];
+    return caregivers.find((c) => c.is_primary === 1 || c.is_primary === true) || caregivers[0] || null;
+  }
+
+  // ------------------------------
+  // Navigation
+  // ------------------------------
+  const pages = {
+    login: "page-login",
+    forgot: "page-forgot",
+    reset: "page-reset",
+    changed: "page-changed",
+    home: "page-home",
+    warning: "page-warning",
+    feedback: "page-feedback",
+    account: "page-account",
+    editProfile: "page-editProfile",
+    seizureHistory: "page-seizureHistory",
+    healthDetails: "page-healthDetails",
+    myTeam: "page-myTeam",
+    alertSettings: "page-alertSettings",
+  };
+
+  function showPage(pageId) {
+    Object.values(pages).forEach((id) => document.getElementById(id).classList.remove("active-page"));
+    document.getElementById(pages[pageId]).classList.add("active-page");
+
+    document.querySelectorAll(".nav-item").forEach((item) =>
+      item.classList.toggle("active", item.dataset.nav === pageId)
+    );
+
+    const nav = document.getElementById("bottomNav");
+    if (["login", "forgot", "reset", "changed"].includes(pageId)) nav.classList.add("hidden-nav");
+    else nav.classList.remove("hidden-nav");
+
+    if (!["login", "forgot", "reset", "changed"].includes(pageId)) {
+      loadPatientStatus(false);
+    }
+
+    if (pageId === "seizureHistory") renderSeizureHistory();
+    if (pageId === "myTeam") renderCaregiversAndPhysicians();
+    if (pageId === "editProfile") loadProfile();
+    if (pageId === "healthDetails") loadHealthDetails();
+    if (pageId === "warning") {
+      updateRiskWindowUI();
+      startRiskCountdown();
+      resetSoundMute();
+    }
+    if (pageId === "alertSettings") {
+      loadAlertSettings();
+    }
+    if (pageId === "feedback") initFeedbackWizard();
+  }
+
+  function hydrateVisibleAccountPages() {
+    if (document.getElementById("page-editProfile").classList.contains("active-page")) loadProfile();
+    if (document.getElementById("page-healthDetails").classList.contains("active-page")) loadHealthDetails();
+    if (document.getElementById("page-myTeam").classList.contains("active-page")) renderCaregiversAndPhysicians();
+  }
+
+  function resetSoundMute() {
+    soundMuted = false;
+  }
+
+  // ------------------------------
+  // Login
+  // Uses database lookup via /patient/{username}/status.
+  // Note: current backend has no password-auth endpoint, so password is only checked as non-empty in this demo.
+  // ------------------------------
+  async function handleLogin() {
+    const uname = document.getElementById("loginUsername").value.trim();
+    const pwd = document.getElementById("loginPassword").value;
+
+    if (!uname || !pwd) {
+      showToast("loginMsg", "❌ Enter username and password", true);
+      return;
+    }
+
+    try {
+      currentUser = uname;
+      currentPatientCode = uname;
+
+      const data = await apiGet(`/patient/${encodeURIComponent(uname)}/status`);
+      latestPatientStatus = data;
+
+      if (data?.patient?.eeg_patient_code) {
+        currentPatientCode = data.patient.eeg_patient_code;
+      }
+
+      localStorage.setItem("sessionUser", uname);
+      localStorage.setItem("patientCode", currentPatientCode);
+
+      showToast("loginMsg", `✅ Welcome, ${data?.patient?.username || uname}`);
+      startPatientPolling();
+
+      setTimeout(() => showPage("home"), 500);
+    } catch (err) {
+      console.error(err);
+      showToast("loginMsg", "❌ Patient account not found or server unavailable", true);
+    }
+  }
+
+  function logout() {
+    currentUser = null;
+    currentPatientCode = "";
+    latestPatientStatus = null;
+
+    if (patientStatusPoll) clearInterval(patientStatusPoll);
+    if (riskInterval) clearInterval(riskInterval);
+
+    localStorage.removeItem("sessionUser");
+    localStorage.removeItem("patientCode");
+
+    showPage("login");
+    document.getElementById("loginUsername").value = "";
+    document.getElementById("loginPassword").value = "";
+  }
+
+  // ------------------------------
+  // Home
+  // ------------------------------
+  function updateHomeFromApi() {
+    const patient = latestPatientStatus?.patient;
+    const pred = latestPatientStatus?.latest_prediction;
+    const det = latestPatientStatus?.latest_detection;
+    const status = latestPatientStatus?.current_status;
+
+    const connectionChip = document.getElementById("homeConnectionChip");
+    if (connectionChip && patient) {
+      connectionChip.innerHTML =
+        `<i class="fas fa-wifi"></i> Connection: <strong>${patient.connection_status || "Unknown"}</strong>`;
+    }
+
+    const chip = document.getElementById("homePredictionChip");
+    if (chip) {
+      if (status === "preictal_warning" && pred?.status === "pending") {
+        chip.innerHTML =
+          `<i class="fas fa-exclamation-triangle"></i> ⚠️ Risk window active (${pct(pred.risk_score)}%)`;
+        chip.classList.remove("safe");
+        chip.classList.add("warning-chip");
+      } else if (status === "seizure_detected") {
+        chip.innerHTML =
+          `<i class="fas fa-bell"></i> Seizure detected${det?.confidence ? ` (${pct(det.confidence)}%)` : ""}`;
+        chip.classList.remove("safe");
+        chip.classList.add("warning-chip");
+      } else {
+        chip.innerHTML = `<i class="fas fa-shield-alt"></i> Monitoring Safely`;
+        chip.classList.add("safe");
+        chip.classList.remove("warning-chip");
+      }
+    }
+
+    const lastPrediction = document.getElementById("homeLastPrediction");
+    if (lastPrediction) {
+      if (pred) {
+        lastPrediction.innerHTML =
+          `<i class="fas fa-chart-simple"></i> Last prediction: ${pred.status} • ${pct(pred.risk_score)}% • ${new Date(pred.prediction_time).toLocaleString()}`;
+      } else {
+        lastPrediction.innerHTML =
+          `<i class="fas fa-chart-simple"></i> Last prediction: No prediction yet`;
+      }
+    }
+
+    const nextAnalysis = document.getElementById("homeNextAnalysis");
+    if (nextAnalysis) {
+      nextAnalysis.innerHTML =
+        `<i class="fas fa-clock"></i> Next analysis: continuous EEG monitoring`;
+    }
+  }
+
+  // ------------------------------
+  // Notifications
+  // ------------------------------
+  async function notifyPrimaryCaregiver(manual = false) {
+    const primary = getPrimaryCaregiver();
+
+    if (!primary) {
+      showGlobalToast("⚠️ No primary caregiver assigned in database.");
+      return false;
+    }
+
+    showGlobalToast(
+      manual
+        ? `📞 Manual notification to ${primary.name}`
+        : `⚠️ AUTO-ALERT: risk window started → ${primary.name} notified`
+    );
+
+    showToast("warningStatusMsg", `✅ ${primary.name} notified`);
+
+    try {
+      await apiPost("/notifications/manual", {
+        patient_code: currentPatientCode || currentUser,
+        title: manual ? "Manual Caregiver Notification" : "Risk Window Started",
+        message: manual
+          ? `Patient requested caregiver notification.`
+          : `PreCue risk window started for ${latestPatientStatus?.patient?.username || currentUser}.`,
+        event_type: manual ? "manual_caregiver_notification" : "patient_risk_window_auto",
+      });
+    } catch (err) {
+      console.warn("Manual notification logging failed:", err);
+    }
+
+    return true;
+  }
+
+  async function notifyPhysician() {
+    showGlobalToast("📨 Urgent notification request logged for physician review.");
+
+    try {
+      await apiPost("/notifications/manual", {
+        patient_code: currentPatientCode || currentUser,
+        title: "Patient Requested Physician Contact",
+        message: `Patient ${latestPatientStatus?.patient?.username || currentUser} requested physician contact from the patient portal.`,
+        event_type: "patient_notify_physician",
+      });
+    } catch (err) {
+      console.warn("Physician notification logging failed:", err);
+    }
+
+    return true;
+  }
+
+  // ------------------------------
+  // Risk window from database prediction
+  // ------------------------------
+  function updateRiskWindowUI() {
+    const now = new Date();
+    const currentTimeEl = document.getElementById("currentTimeDisplay");
+    const rangeEl = document.getElementById("riskWindowRange");
+    const statusDiv = document.getElementById("riskStatusMsg");
+    const homeChip = document.getElementById("homePredictionChip");
+
+    if (currentTimeEl) {
+      currentTimeEl.innerHTML = `<i class="far fa-clock"></i> Current time: ${now.toLocaleTimeString()}`;
+    }
+
+    const pred = latestPatientStatus?.latest_prediction;
+    const status = latestPatientStatus?.current_status;
+
+    if (status === "seizure_detected") {
+      if (rangeEl) {
+        rangeEl.innerHTML = `<i class="fas fa-chart-line"></i> Predicted window: completed`;
+      }
+      if (statusDiv) {
+        statusDiv.innerHTML =
+          '<span style="color:#c25d2e;"><i class="fas fa-bell"></i> Seizure detected by system.</span>';
+      }
+      if (homeChip) {
+        homeChip.innerHTML = '<i class="fas fa-bell"></i> Seizure detected';
+        homeChip.classList.remove("safe");
+        homeChip.classList.add("warning-chip");
+      }
+      return { inside: false, endTime: null };
+    }
+
+    if (!pred || status !== "preictal_warning" || pred.status !== "pending") {
+      if (rangeEl) {
+        rangeEl.innerHTML = `<i class="fas fa-chart-line"></i> Predicted window: --:-- – --:--`;
+      }
+      if (statusDiv) {
+        statusDiv.innerHTML =
+          '<span style="color:#1e6f5c;"><i class="fas fa-check-circle"></i> Outside risk window.</span>';
+      }
+      if (homeChip) {
+        homeChip.innerHTML = '<i class="fas fa-shield-alt"></i> Monitoring Safely';
+        homeChip.classList.add("safe");
+        homeChip.classList.remove("warning-chip");
+      }
+      lastInsideState = false;
+      return { inside: false, endTime: null };
+    }
+
+    const startTime = new Date(pred.prediction_time);
+    const endTime = getPredictionEndTime(pred);
+    
+    if (!endTime) {
+      return { inside: false, endTime: null };
+    }
+
+    const inside = Date.now() < endTime.getTime();
+
+    if (rangeEl) {
+      rangeEl.innerHTML =
+        `<i class="fas fa-chart-line"></i> Predicted window: ${startTime.toLocaleTimeString()} – ${endTime.toLocaleTimeString()}`;
+    }
+
+    if (inside) {
+      if (statusDiv) {
+        statusDiv.innerHTML =
+          `<span style="color:#bc5a2c;"><i class="fas fa-bell"></i> ⚠️ INSIDE risk window. Risk score: ${pct(pred.risk_score)}%</span>`;
+      }
+
+      if (homeChip) {
+        homeChip.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ⚠️ INSIDE RISK WINDOW (${pct(pred.risk_score)}%)`;
+        homeChip.classList.remove("safe");
+        homeChip.classList.add("warning-chip");
+      }
+
+      if (!autoNotifyTriggered && !lastInsideState) {
+        autoNotifyTriggered = true;
+        // Patient device alert: sound + vibration
+        // triggerPatientRiskAlert();
+        // / Caregiver notification/log
+        notifyPrimaryCaregiver(false);
+      }
+    } else {
+      if (statusDiv) {
+        statusDiv.innerHTML =
+          '<span style="color:#bc5a2c;"><i class="fas fa-clock"></i> Risk window ended.</span>';
+      }
+
+      if (homeChip) {
+        homeChip.innerHTML = '<i class="fas fa-shield-alt"></i> Monitoring Safely';
+        homeChip.classList.add("safe");
+        homeChip.classList.remove("warning-chip");
+      }
+
+      autoNotifyTriggered = false;
+    }
+
+    lastInsideState = inside;
+    return { inside, endTime };
+  }
+
+  function startRiskCountdown() {
+    if (riskInterval) clearInterval(riskInterval);
+
+    let lastEndTrigger = false;
+
+    function tick() {
+      const { inside, endTime } = updateRiskWindowUI();
+      const timer = document.getElementById("countdownTimer");
+      const label = document.getElementById("countdownLabel");
+
+      if (!timer || !label) return;
+
+      if (!inside || !endTime) {
+        if (latestPatientStatus?.current_status === "seizure_detected") {
+          timer.innerText = "00:00:00";
+          label.innerText = "Seizure detected";
+        } else {
+          timer.innerText = "--:--:--";
+          label.innerText = "No active risk window";
+        }
+        lastEndTrigger = false;
+        return;
+      }
+
+      const diff = Math.floor((endTime.getTime() - Date.now()) / 1000);
+
+      if (diff <= 0) {
+        timer.innerText = "00:00:00";
+        label.innerText = "Risk window ended";
+
+        if (!lastEndTrigger) {
+          lastEndTrigger = true;
+          playEndOfWindowSound();
+          
+        }
+
+        return;
+      }
+
+      timer.innerText = formatCountdownFromSeconds(diff);
+      label.innerText = "Time remaining";
+    }
+
+    tick();
+    riskInterval = setInterval(tick, 1000);
+  }
+
+  // ------------------------------
+  // Profile and health from database
+  // ------------------------------
+  function loadProfile() {
+    const p = latestPatientStatus?.patient;
+
+    document.getElementById("fullName").value = p?.full_name || "";
+    document.getElementById("profileEmail").value = p?.email || "";
+    document.getElementById("phone").value = p?.phone || p?.caregiver_phone || "";
+  }
+
+  function loadHealthDetails() {
+    const p = latestPatientStatus?.patient;
+
+    document.getElementById("medications").value = p?.medications || "";
+    document.getElementById("allergies").value = p?.allergies || "";
+    document.getElementById("treatmentPlanDisplay").innerHTML =
+      p?.treatment_plan
+        ? `<i class="fas fa-notes-medical"></i> <strong>Prescribed plan</strong><br>${String(p.treatment_plan).replace(/\n/g, "<br>")}`
+        : `<i class="fas fa-notes-medical"></i> No treatment plan recorded.`;
+  }
+
+  function saveRequiresEndpoint(toastId, itemName) {
+    showToast(
+      toastId,
+      `⚠️ ${itemName} is displayed from database. Add a PUT endpoint in FastAPI to save edits.`,
+      true
+    );
+  }
+
+  // ------------------------------
+  // Care team from database
+  // ------------------------------
+  function renderCaregiversAndPhysicians() {
+    renderCaregivers();
+    renderFixedPhysicians();
+  }
+
+  function renderCaregivers() {
+    const container = document.getElementById("caregiversList");
+    if (!container) return;
+
+    const caregivers = latestPatientStatus?.caregivers || [];
+
+    if (!caregivers.length) {
+      container.innerHTML = "<p>No caregivers assigned in database.</p>";
+      return;
+    }
+
+    container.innerHTML = caregivers
+      .map((c) => `
+        <div class="contact-badge ${c.is_primary ? "primary-badge" : ""}">
+          <span>
+            <i class="fas fa-heart"></i>
+            <strong>${c.name}</strong>
+            ${c.relation ? `(${c.relation})` : ""}
+            ${c.phone ? `- ${c.phone}` : ""}
+            ${c.is_primary ? "⭐ PRIMARY" : ""}
+          </span>
+          <span style="font-size:0.75rem;"><i class="fas fa-database"></i> from DB</span>
+        </div>
+      `)
+      .join("");
+  }
+
+  function renderFixedPhysicians() {
+    const container = document.getElementById("physiciansListFixed");
+    if (!container) return;
+
+    const p = latestPatientStatus?.patient;
+
+    container.innerHTML = `
+      <div class="contact-badge" style="background:#eef3fa;">
+        <span>
+          <i class="fas fa-user-md"></i>
+          <strong>Assigned physician</strong>
+          ${p?.doctor_id ? `(Doctor ID: ${p.doctor_id})` : ""}
+        </span>
+        <span style="font-size:0.75rem;"><i class="fas fa-database"></i> from DB</span>
+      </div>
+    `;
+  }
+
+  // ------------------------------
+  // Alert settings
+  // ------------------------------
+  function loadAlertSettings() {
+    document.getElementById("soundCheckbox").checked = localStorage.getItem("soundPref") === "true";
+    document.getElementById("vibrationCheckbox").checked = localStorage.getItem("vibPref") === "true";
+
+    const smsEnabled = latestPatientStatus?.patient?.sms_enabled;
+    const msg = document.getElementById("alertSaveMsg");
+    if (msg && smsEnabled !== undefined) {
+      msg.innerHTML = smsEnabled ? "SMS alerts enabled in database." : "SMS alerts disabled in database.";
+    }
+  }
+
+  // ------------------------------
+  // Patient reports from database history
+  // ------------------------------
+  async function renderSeizureHistory() {
+    const container = document.getElementById("seizureLogList");
+    if (!container) return;
+
+    container.innerHTML = "<p>Loading reports from database...</p>";
+
+    const history = await loadPatientHistory();
+
+    if (!history.length) {
+      container.innerHTML = "<p>No recorded seizure or prediction reports found in database.</p>";
+      return;
+    }
+
+    container.innerHTML = history
+      .map((rec) => `
+        <div style="border-bottom:1px solid #ececec; padding:12px 0;">
+          <strong>${rec.time || new Date(rec.prediction_time).toLocaleString()}</strong>
+          - ${rec.status}
+          - Confidence: ${rec.confidence}%<br>
+          <small>
+            EEG Code: ${rec.eeg_patient_code || rec.patientId}
+            • Feedback: ${rec.feedback}
+            • Prediction ID: ${rec.prediction_id}
+          </small>
+        </div>
+      `)
+      .join("");
+  }
+
+  // ------------------------------
+  // Feedback
+  // Uses DB if /patient/{code}/feedback exists.
+  // Falls back to /notifications/manual so the feedback event is still logged in notification_outbox.
+  // ------------------------------
+  function initFeedbackWizard() {
+    feedbackStep = 0;
+    feedbackAnswers = { q1: null, q2: null, q3: null, q4: null };
+    renderFeedbackStep();
+  }
+
+  async function submitFeedbackToDb(answers) {
+    const pred = latestPatientStatus?.latest_prediction;
+
+    const payload = {
+      prediction_id: pred?.prediction_id || null,
+      patient_code: currentPatientCode || currentUser,
+      seizure_occurred: answers.q1,
+      aura_present: answers.q2,
+      seizure_count: answers.q3,
+      rescue_medication_taken: answers.q4,
+      submitted_at: new Date().toISOString(),
+    };
+
+    try {
+      await apiPost(`/patient/${encodeURIComponent(currentPatientCode || currentUser)}/feedback`, payload);
+      return { ok: true, mode: "feedback_endpoint" };
+    } catch (err) {
+      console.warn("Feedback endpoint unavailable, logging as manual notification:", err);
+
+      await apiPost("/notifications/manual", {
+        patient_code: currentPatientCode || currentUser,
+        title: "Patient Feedback Submitted",
+        message: `Feedback for prediction ${payload.prediction_id || "N/A"}: seizure=${payload.seizure_occurred}, aura=${payload.aura_present}, count=${payload.seizure_count}, rescue_med=${payload.rescue_medication_taken}`,
+        event_type: "patient_feedback",
+      });
+
+      return { ok: true, mode: "notification_log" };
+    }
+  }
+
+  function renderFeedbackStep() {
+    const container = document.getElementById("feedbackWizardContainer");
+    if (!container) return;
+
+    const questions = [
+      { id: "q1", text: "Did a seizure occur during the predicted risk window?", options: ["Yes", "No"] },
+      { id: "q2", text: "Did you experience any pre-seizure aura?", options: ["Yes", "No", "Unsure"] },
+      { id: "q3", text: "How many seizures occurred?", options: ["0", "1", "2+"] },
+      { id: "q4", text: "Did you take rescue medication?", options: ["Yes", "No"] },
+    ];
+
+    if (feedbackStep >= questions.length) {
+      container.innerHTML =
+        `<div class="feedback-wizard-step"><i class="fas fa-spinner fa-spin"></i> Submitting feedback to database...</div>`;
+
+      submitFeedbackToDb(feedbackAnswers)
+        .then((result) => {
+          showToast("feedbackAnswerMsg", "✅ Feedback submitted. Thank you!");
+          container.innerHTML =
+            `<div class="feedback-wizard-step">
+              <i class="fas fa-check-circle"></i>
+              All answers recorded${result.mode === "notification_log" ? " as a database notification log" : ""}.
+            </div>
+            <button id="resetFeedbackBtn" class="btn btn-primary btn-sm">Provide New Feedback</button>`;
+
+          document.getElementById("resetFeedbackBtn")?.addEventListener("click", () => initFeedbackWizard());
+        })
+        .catch((err) => {
+          console.error(err);
+          container.innerHTML =
+            `<div class="feedback-wizard-step">
+              <i class="fas fa-exclamation-triangle"></i>
+              Could not submit feedback. Please try again.
+            </div>
+            <button id="resetFeedbackBtn" class="btn btn-primary btn-sm">Try Again</button>`;
+
+          document.getElementById("resetFeedbackBtn")?.addEventListener("click", () => initFeedbackWizard());
+        });
+
+      return;
+    }
+
+    const q = questions[feedbackStep];
+
+    container.innerHTML =
+      `<div class="feedback-wizard-step">
+        <p><strong>${feedbackStep + 1}/${questions.length} ${q.text}</strong></p>
+        <div class="radio-group" id="stepRadios">
+          ${q.options
+            .map((opt) => `<label><input type="radio" name="stepRadio" value="${opt.toLowerCase()}"> ${opt}</label>`)
+            .join("")}
+        </div>
+        <div class="flex-row"><button id="nextFeedbackBtn" class="btn btn-primary">Next</button></div>
+      </div>`;
+
+    document.getElementById("nextFeedbackBtn").onclick = () => {
+      const selected = document.querySelector('input[name="stepRadio"]:checked');
+
+      if (!selected) {
+        showToast("feedbackAnswerMsg", "Please select an option", true);
+        return;
+      }
+
+      feedbackAnswers[q.id] = selected.value;
+      feedbackStep++;
+      renderFeedbackStep();
+    };
+  }
+
+  // ------------------------------
+  // Event bindings
+  // ------------------------------
+  document.getElementById("doLoginBtn").onclick = handleLogin;
+  document.getElementById("headerLogoutBtn").onclick = logout;
+  document.getElementById("logoutAccountBtn").onclick = logout;
+  document.getElementById("gotoForgotBtn").onclick = () => showPage("forgot");
+  document.getElementById("backToLoginFromForgot").onclick = () => showPage("login");
+  document.getElementById("backToLoginFromReset").onclick = () => showPage("login");
+  document.getElementById("loginNowSuccessBtn").onclick = () => showPage("login");
+
+  document.getElementById("sendOtpForgotBtn").onclick = () => {
+    const mail = document.getElementById("forgotEmail").value.trim();
+    if (mail) {
+      showToast("otpSentMsg", "📲 OTP sent");
+      setTimeout(() => showPage("reset"), 1000);
+    } else {
+      showToast("otpSentMsg", "Enter email", true);
+    }
+  };
+
+  document.getElementById("resetPwdConfirmBtn").onclick = () => {
+    const np = document.getElementById("newPwd").value;
+    const cp = document.getElementById("confirmPwd").value;
+
+    if (!validatePasswordStrength(np)) {
+      showToast("resetErrorMsg", "Password must be 8+ chars, 1 uppercase, 1 digit", true);
+    } else if (np !== cp) {
+      showToast("resetErrorMsg", "Mismatch", true);
+    } else {
+      showToast("resetErrorMsg", "✅ Reset request accepted");
+      setTimeout(() => showPage("changed"), 1000);
+    }
+  };
+
+  document.querySelectorAll(".backToAccount").forEach((btn) =>
+    btn.addEventListener("click", () => showPage("account"))
+  );
+
+  document.querySelectorAll(".account-row[data-page]").forEach((row) =>
+    row.addEventListener("click", () => showPage(row.dataset.page))
+  );
+
+  document.querySelectorAll(".nav-item").forEach((item) =>
+    item.addEventListener("click", () => showPage(item.dataset.nav))
+  );
+
+  document.getElementById("homeNotifyPhysicianBtn").onclick = notifyPhysician;
+  document.getElementById("notifyPhysicianFromWarningBtn").onclick = notifyPhysician;
+
+  document.getElementById("reNotifyCaregiverBtn").onclick = () => {
+    notifyPrimaryCaregiver(true);
+  };
+
+  document.getElementById("silenceWarningBtn").onclick = () => {
+    if (riskInterval) clearInterval(riskInterval);
+    stopSound();
+    showToast("warningStatusMsg", "Alarms silenced");
+  };
+
+  document.getElementById("backToHomeFromWarning").onclick = () => showPage("home");
+
+  document.getElementById("saveAlertSettingsBtn").onclick = () => {
+  localStorage.setItem("soundPref", document.getElementById("soundCheckbox").checked);
+  localStorage.setItem("vibPref", document.getElementById("vibrationCheckbox").checked);
+
+  // unlock audio after user interaction
+  if (document.getElementById("soundCheckbox").checked) {
+    try {
+      initAudio();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+    } catch (e) {}
+  }
+
+  // quick test vibration when saving
+  if (document.getElementById("vibrationCheckbox").checked && "vibrate" in navigator) {
+    navigator.vibrate(300);
+  }
+
+  showToast("alertSaveMsg", "✅ Alert preferences saved. Patient sound/vibration alerts are enabled.");
+};
+
+ document.getElementById("saveProfileBtn").onclick = async () => {
+  const lookup = currentPatientCode || currentUser || localStorage.getItem("patientCode");
+
+  const payload = {
+    full_name: document.getElementById("fullName").value.trim(),
+    email: document.getElementById("profileEmail").value.trim(),
+    phone: document.getElementById("phone").value.trim(),
+  };
+
+  try {
+    await apiPut(`/patient/${encodeURIComponent(lookup)}/profile`, payload);
+
+    showToast("profileMsg", "✅ Profile saved to database");
+
+    await loadPatientStatus(false);
+    loadProfile();
+  } catch (err) {
+    console.error(err);
+    showToast("profileMsg", "❌ Could not save profile to database", true);
+  }
+};
+
+  document.getElementById("saveHealthBtn")?.addEventListener("click", () => {
+    saveRequiresEndpoint("healthMsg", "Health details");
+  });
+
+  document.getElementById("addCaregiverBtn")?.addEventListener("click", () => {
+    showToast("teamMsg", "⚠️ Caregivers are displayed from database. Add POST/DELETE caregiver endpoints to edit.", true);
+  });
+
+  // ------------------------------
+  // Initial load
+  // ------------------------------
+  window.onload = async () => {
+    renderFixedPhysicians();
+    renderCaregivers();
+
+    document.getElementById("soundCheckbox").checked = localStorage.getItem("soundPref") === "true";
+    document.getElementById("vibrationCheckbox").checked = localStorage.getItem("vibPref") === "true";
+
+    const savedUser = localStorage.getItem("sessionUser");
+
+    if (savedUser) {
+      currentUser = savedUser;
+      currentPatientCode = localStorage.getItem("patientCode") || savedUser;
+
+      await loadPatientStatus(true);
+      startPatientPolling();
+      showPage("home");
+    } else {
+      showPage("login");
+    }
+  };
+</script>
+</body>
+</html>
